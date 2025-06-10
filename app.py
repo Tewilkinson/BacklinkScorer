@@ -77,7 +77,7 @@ def calculate_score(row, anchor_keywords):
     return round(score, 1)
 
 # Streamlit UI setup
-st.title('📊 Backlink Scoring Dashboard')
+st.title('Backlink Scoring Dashboard')
 
 st.sidebar.subheader('Download Template')
 st.sidebar.download_button('Download Template', create_template(), file_name='backlink_template.xlsx')
