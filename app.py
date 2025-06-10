@@ -35,22 +35,18 @@ def create_template():
 
 # Function to clean up columns by stripping leading/trailing spaces and ensuring string type
 def clean_data(df):
-    # Convert columns to string and strip any extra spaces
+    # Convert columns to string and strip any extra spaces, handle non-strings gracefully
     df['Nofollow'] = df['Nofollow'].astype(str).str.strip()
     df['Sponsored'] = df['Sponsored'].astype(str).str.strip()
-    df['Lost Date'] = df['Lost Date'].astype(str).str.strip()
-    
-    # Optionally handle NaN by converting them to an empty string
-    df['Lost Date'].fillna('', inplace=True)
-    
-    return df
+    df['Lost Date'] = df['Lost Date'].fillna('').astype(str).str.strip()  # Handle NaN and empty strings
 
+    return df
 
 # Function to calculate the score for a backlink
 def calculate_score(row, anchor_keywords):
     # Debugging: Print the Nofollow, Sponsored, and Lost Date values
     print(f"Processing {row['Referring page title']} - Nofollow: {row['Nofollow']}, Sponsored: {row['Sponsored']}, Lost Date: {row['Lost Date']}")
-    
+
     # Check if Nofollow or Sponsored is TRUE or if Lost Date exists
     if row['Nofollow'].strip().upper() == 'TRUE' or row['Sponsored'].strip().upper() == 'TRUE' or row['Lost Date'].strip() != '':
         print(f"Skipping {row['Referring page title']} due to Nofollow, Sponsored, or Lost Date")
