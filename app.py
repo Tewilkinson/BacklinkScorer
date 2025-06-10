@@ -125,7 +125,7 @@ if uploaded_file:
 
         fig = go.Figure()
         fig.add_trace(go.Bar(x=domain_summary['Domain'], y=domain_summary['domain_score'], name='Domain Score', marker_color='red'))
-        fig.add_trace(go.Scatter(x=domain_summary['Domain'], y=domain_summary['link_count'], mode='lines+markers', name='Link Count', yaxis='y2'marker_color='black'))
+        fig.add_trace(go.Scatter(x=domain_summary['Domain'], y=domain_summary['link_count'], mode='lines+markers', name='Link Count', yaxis='y2',marker_color='black'))
 
         fig.update_layout(title='Domain Score & Link Count', yaxis=dict(title='Domain Score'),
                           yaxis2=dict(title='Link Count', overlaying='y', side='right'))
