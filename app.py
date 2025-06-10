@@ -38,7 +38,10 @@ def calculate_score(row, anchor_keywords):
     # If the link is nofollow or sponsored or lost_date exists, return 0
     if row['Nofollow'] == 'TRUE' or row['Sponsored'] == 'TRUE' or row['Lost Date']:
         return 0
-    
+
+    # Debugging: Print out row data to see if it's being processed correctly
+    print(f"Processing row: {row['Referring page title']}")
+
     # Normalize values
     dr_min, dr_max = 0, 100
     ur_min, ur_max = 0, 100
@@ -50,19 +53,28 @@ def calculate_score(row, anchor_keywords):
     normalized_rd = normalize(row['Referring domains'], rd_min, rd_max)
     normalized_traffic = normalize(row['Page traffic'], traffic_min, traffic_max)
 
+    # Debugging: Print normalized values
+    print(f"Normalized DR: {normalized_dr}, UR: {normalized_ur}, RD: {normalized_rd}, Traffic: {normalized_traffic}")
+
     # Anchor text bonus
     anchor_text = row['Anchor'] if isinstance(row['Anchor'], str) else ''
     anchor_bonus = 0
     for keyword in anchor_keywords:
         if keyword.lower() in anchor_text.lower():
             anchor_bonus += 1  # Apply bonus for matching keywords
-    
+
+    # Debugging: Print the anchor bonus
+    print(f"Anchor Bonus: {anchor_bonus}")
+
     # Link type adjustment (boost for text, penalty for image/nav)
     link_type_adjustment = 0
     if row['Link Type'] == 'text':
         link_type_adjustment = 2
     elif row['Link Type'] in ['image', 'nav']:
         link_type_adjustment = -2
+
+    # Debugging: Print the link type adjustment
+    print(f"Link Type Adjustment: {link_type_adjustment}")
     
     # Final score calculation
     score = (
@@ -74,7 +86,11 @@ def calculate_score(row, anchor_keywords):
         (link_type_adjustment * 0.05)  # Text boost or penalty
     )
     
+    # Debugging: Print the final score
+    print(f"Final Score for {row['Referring page title']}: {score}")
+    
     return score
+
 
 # Streamlit UI setup
 st.title('Backlink Scoring Tool')
