@@ -8,6 +8,7 @@ def normalize(value, min_value, max_value):
     return 10 * (value - min_value) / (max_value - min_value)
 
 # Function to generate a template Excel file for user download
+
 def create_template():
     data = {
         'Referring page title': ['Page 1', 'Page 2'],
@@ -26,7 +27,9 @@ def create_template():
     }
     df = pd.DataFrame(data)
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    
+    # Use openpyxl instead of xlsxwriter for compatibility
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)
     output.seek(0)
     return output
