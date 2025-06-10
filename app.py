@@ -88,7 +88,7 @@ if uploaded_file:
         col2.metric("🔗 Total Links Submitted", total_links_submitted)
 
         st.subheader("Top 10 Links")
-        st.table(df[['Referring page title', 'Referring page URL']].head(10))
+        st.table(df[['Referring page title', 'Referring page URL', 'Score']].head(10))
 
         df['Domain'] = df['Referring page URL'].apply(lambda x: urlparse(x).netloc)
         domain_summary = df.groupby('Domain').agg(
