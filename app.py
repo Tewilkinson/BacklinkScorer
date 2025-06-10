@@ -88,8 +88,9 @@ if uploaded_file:
         col2.metric("🔗 Total Links Submitted", total_links_submitted)
 
         st.subheader("Top 10 Links")
-        top_links = df[df['Score'] > 0].sort_values(by='Score', ascending=False).head(10)
-        st.dataframe(top_links[['Referring page title', 'Referring page URL', 'Score']].reset_index(drop=False).rename(columns={'index': 'Position'}).assign(Position=lambda x: x['Position'] + 1)[['Position', 'Referring page title', 'Referring page URL', 'Score']], use_container_width=True)
+        top_links = df[df['Score'] > 0].sort_values(by='Score', ascending=False).head(10).reset_index(drop=True)
+top_links.insert(0, 'Position', range(1, len(top_links) + 1))
+st.dataframe(top_links[['Position', 'Referring page title', 'Referring page URL', 'Score']], use_container_width=True).rename(columns={'index': 'Position'}).assign(Position=lambda x: x['Position'] + 1)[['Position', 'Referring page title', 'Referring page URL', 'Score']], use_container_width=True)
 
         df['Domain'] = df['Referring page URL'].apply(lambda x: urlparse(x).netloc)
         domain_summary = df.groupby('Domain').agg(
