@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import io
+from urllib.parse import urlparse
+import plotly.graph_objects as go
 
 # Function to normalize values to a 0-10 scale
 def normalize(value, min_value, max_value):
@@ -17,129 +19,96 @@ def create_template():
         'Referring domains': [100, 100],
         'Page traffic': [1000, 1000],
         'Anchor': ['AI Image Generator', 'AI Image Generator'],
-        'Link Type': ['text', 'text'],  # 'text', 'image', or 'nav'
-        'Nofollow': ['FALSE', 'FALSE'],  # TRUE or FALSE
-        'Sponsored': ['FALSE', 'FALSE'],  # TRUE or FALSE
+        'Link Type': ['text', 'text'],
+        'Nofollow': ['FALSE', 'FALSE'],
+        'Sponsored': ['FALSE', 'FALSE'],
         'Lost Date': ['', ''],
         'First Seen': ['2023-06-01', '2023-06-02'],
         'Last Seen': ['2023-06-10', '2023-06-11']
     }
     df = pd.DataFrame(data)
     output = io.BytesIO()
-    
-    # Use openpyxl instead of xlsxwriter for compatibility
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)
     output.seek(0)
     return output
 
-# Function to clean up columns by stripping leading/trailing spaces and ensuring string type
+# Data cleanup function
 def clean_data(df):
-    # Convert columns to string and strip any extra spaces, handle non-strings gracefully
     df['Nofollow'] = df['Nofollow'].astype(str).str.strip()
     df['Sponsored'] = df['Sponsored'].astype(str).str.strip()
-    df['Lost Date'] = df['Lost Date'].fillna('').astype(str).str.strip()  # Handle NaN and empty strings
-
+    df['Lost Date'] = df['Lost Date'].fillna('').astype(str).str.strip()
     return df
 
-# Function to calculate the score for a backlink
+# Calculate score for a backlink
 def calculate_score(row, anchor_keywords):
-    # Debugging: Print the Nofollow, Sponsored, and Lost Date values
-    print(f"Processing {row['Referring page title']} - Nofollow: {row['Nofollow']}, Sponsored: {row['Sponsored']}, Lost Date: {row['Lost Date']}")
-
-    # Check if Nofollow or Sponsored is TRUE or if Lost Date exists
-    if row['Nofollow'].strip().upper() == 'TRUE' or row['Sponsored'].strip().upper() == 'TRUE' or row['Lost Date'].strip() != '':
-        print(f"Skipping {row['Referring page title']} due to Nofollow, Sponsored, or Lost Date")
+    if row['Nofollow'].upper() == 'TRUE' or row['Sponsored'].upper() == 'TRUE' or row['Lost Date'] != '':
         return 0
 
-    # Normalize values
-    dr_min, dr_max = 0, 100
-    ur_min, ur_max = 0, 100
-    rd_min, rd_max = 0, 5000
-    traffic_min, traffic_max = 0, 1000000
-    
-    normalized_dr = normalize(row['Domain rating'], dr_min, dr_max)
-    normalized_ur = normalize(row['UR'], ur_min, ur_max)
-    normalized_rd = normalize(row['Referring domains'], rd_min, rd_max)
-    normalized_traffic = normalize(row['Page traffic'], traffic_min, traffic_max)
+    normalized_dr = normalize(row['Domain rating'], 0, 100)
+    normalized_ur = normalize(row['UR'], 0, 100)
+    normalized_rd = normalize(row['Referring domains'], 0, 5000)
+    normalized_traffic = normalize(row['Page traffic'], 0, 1000000)
 
-    # Anchor text bonus
-    anchor_text = row['Anchor'] if isinstance(row['Anchor'], str) else ''
-    anchor_bonus = 0
-    for keyword in anchor_keywords:
-        if keyword.lower() in anchor_text.lower():
-            anchor_bonus += 1  # Apply bonus for matching keywords
+    anchor_bonus = sum(1 for keyword in anchor_keywords if keyword.lower() in str(row['Anchor']).lower())
 
-    # Link type adjustment (boost for text, penalty for image/nav)
-    link_type_adjustment = 0
-    if row['Link Type'] == 'text':
-        link_type_adjustment = 2
-    elif row['Link Type'] in ['image', 'nav']:
-        link_type_adjustment = -2
-    
-    # Final score calculation
-    score = (
-        (normalized_dr * 0.30) + 
-        (normalized_ur * 0.20) + 
-        (normalized_rd * 0.20) + 
-        (normalized_traffic * 0.15) + 
-        (anchor_bonus * 0.10) + 
-        (link_type_adjustment * 0.05)  # Text boost or penalty
-    )
-    
-    # Debugging: Print the final score
-    print(f"Final Score for {row['Referring page title']}: {score}")
-    
-    return score
+    link_type_adjustment = 2 if row['Link Type'] == 'text' else -2 if row['Link Type'] in ['image', 'nav'] else 0
 
+    score = ((normalized_dr * 0.30) + (normalized_ur * 0.20) + (normalized_rd * 0.20) +
+             (normalized_traffic * 0.15) + (anchor_bonus * 0.10) + (link_type_adjustment * 0.05))
 
-# Streamlit UI setup
-st.title('Backlink Scoring Tool')
+    return round(score, 1)
 
-# Provide a template file for download
+# Streamlit UI
+st.title('📊 Backlink Scoring Dashboard')
+
 st.sidebar.subheader('Download Template')
-st.sidebar.write('Download the Excel template to fill out your backlink data.')
 st.sidebar.download_button('Download Template', create_template(), file_name='backlink_template.xlsx')
 
-# Upload Excel file
-uploaded_file = st.file_uploader("Upload your backlink data (Excel)", type=['xlsx'])
+uploaded_file = st.file_uploader("Upload backlink data (Excel)", type=['xlsx'])
 
-# Input box for anchor text keyword boost
-anchor_input = st.text_input("Enter keywords for anchor text boost (comma-separated):", "")
-
-# Process input anchor keywords
-if anchor_input:
-    anchor_keywords = [keyword.strip() for keyword in anchor_input.split(',')]
-else:
-    anchor_keywords = []
+anchor_input = st.text_input("Anchor text keywords (comma-separated):", "")
+anchor_keywords = [keyword.strip() for keyword in anchor_input.split(',')] if anchor_input else []
 
 if uploaded_file:
-    # Load data from uploaded file
     df = pd.read_excel(uploaded_file)
-    
-    # Clean up the data
     df = clean_data(df)
 
-    # Ensure the necessary columns exist
-    required_columns = ['Referring page title', 'Referring page URL', 'Domain rating', 'UR', 'Referring domains', 'Page traffic', 'Anchor', 'Link Type', 'Nofollow', 'Sponsored', 'Lost Date', 'First Seen', 'Last Seen']
-    
-    if all(col in df.columns for col in required_columns):
-        # Apply the scoring function to each row
-        df['Score'] = df.apply(calculate_score, axis=1, anchor_keywords=anchor_keywords)
-        
-        # Display the results
-        st.write("Backlink Scores (out of 10):", df[['Referring page title', 'Score']])
+    required_columns = ['Referring page title', 'Referring page URL', 'Domain rating', 'UR', 'Referring domains',
+                        'Page traffic', 'Anchor', 'Link Type', 'Nofollow', 'Sponsored', 'Lost Date', 'First Seen', 'Last Seen']
 
-        # Visualize the scores as a bar chart
-        st.bar_chart(df[['Referring page title', 'Score']].set_index('Referring page title'))
-        
-        # Generate the Excel file and allow users to download it
+    if all(col in df.columns for col in required_columns):
+        df['Score'] = df.apply(calculate_score, axis=1, anchor_keywords=anchor_keywords)
+
+        overall_score = df['Score'].sum().round(1)
+        total_links_submitted = len(df)
+
+        col1, col2 = st.columns(2)
+        col1.metric("📈 Overall Score", f"{overall_score:.1f}")
+        col2.metric("🔗 Total Links Submitted", total_links_submitted)
+
+        st.subheader("Top 10 Links")
+        st.table(df[['Referring page title', 'Referring page URL']].head(10))
+
+        df['Domain'] = df['Referring page URL'].apply(lambda x: urlparse(x).netloc)
+        domain_summary = df.groupby('Domain').agg(
+            domain_score=('Score', 'sum'),
+            link_count=('Referring page URL', 'count')
+        ).reset_index().sort_values(by='domain_score', ascending=False).head(10)
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=domain_summary['Domain'], y=domain_summary['domain_score'], name='Domain Score', marker_color='skyblue'))
+        fig.add_trace(go.Scatter(x=domain_summary['Domain'], y=domain_summary['link_count'], mode='lines+markers', name='Link Count', yaxis='y2'))
+
+        fig.update_layout(title='Domain Score & Link Count', yaxis=dict(title='Domain Score'),
+                          yaxis2=dict(title='Link Count', overlaying='y', side='right'))
+
+        st.plotly_chart(fig, use_container_width=True)
+
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             df.to_excel(writer, index=False)
         output.seek(0)
-
-        # Allow users to download the scored Excel file
         st.download_button('Download Scored Data', output, file_name="scored_backlinks.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     else:
-        st.error("The uploaded file must contain the required columns: Referring page title, Referring page URL, Domain rating, UR, Referring domains, Page traffic, Anchor, Link Type, Nofollow, Sponsored, Lost Date, First Seen, Last Seen.")
+        st.error("Missing required columns in uploaded file.")
