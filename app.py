@@ -97,6 +97,13 @@ if uploaded_file:
     if all(col in df.columns for col in required_columns):
         df['Score'] = df.apply(calculate_score, axis=1, anchor_keywords=anchor_keywords)
 
+        # Penalize duplicate domains: keep highest score per domain, reduce others
+        df['Domain'] = df['Referring page URL'].apply(lambda x: urlparse(x).netloc)
+        df = df.sort_values(by='Score', ascending=False)
+        df['Rank'] = df.groupby('Domain').cumcount()
+        df['Score'] = df.apply(lambda row: row['Score'] if row['Rank'] == 0 else round(row['Score'] * 0.5, 1), axis=1)
+        df.drop(columns=['Rank'], inplace=True)
+
         overall_score = df['Score'].sum().round(1)
         total_links_submitted = len(df)
 
