@@ -33,6 +33,14 @@ def create_template():
     output.seek(0)
     return output
 
+# Function to clean up columns by stripping leading/trailing spaces
+def clean_data(df):
+    # Strip any extra spaces from the relevant columns
+    df['Nofollow'] = df['Nofollow'].str.strip()
+    df['Sponsored'] = df['Sponsored'].str.strip()
+    df['Lost Date'] = df['Lost Date'].str.strip()
+    return df
+
 # Function to calculate the score for a backlink
 def calculate_score(row, anchor_keywords):
     # If the link is nofollow or sponsored or lost_date exists, return 0
@@ -91,7 +99,6 @@ def calculate_score(row, anchor_keywords):
     
     return score
 
-
 # Streamlit UI setup
 st.title('Backlink Scoring Tool')
 
@@ -116,6 +123,9 @@ if uploaded_file:
     # Load data from uploaded file
     df = pd.read_excel(uploaded_file)
     
+    # Clean up the data
+    df = clean_data(df)
+
     # Ensure the necessary columns exist
     required_columns = ['Referring page title', 'Referring page URL', 'Domain rating', 'UR', 'Referring domains', 'Page traffic', 'Anchor', 'Link Type', 'Nofollow', 'Sponsored', 'Lost Date', 'First Seen', 'Last Seen']
     
