@@ -33,13 +33,18 @@ def create_template():
     output.seek(0)
     return output
 
-# Function to clean up columns by stripping leading/trailing spaces
+# Function to clean up columns by stripping leading/trailing spaces and ensuring string type
 def clean_data(df):
-    # Strip any extra spaces from the relevant columns
-    df['Nofollow'] = df['Nofollow'].str.strip()
-    df['Sponsored'] = df['Sponsored'].str.strip()
-    df['Lost Date'] = df['Lost Date'].str.strip()
+    # Convert columns to string and strip any extra spaces
+    df['Nofollow'] = df['Nofollow'].astype(str).str.strip()
+    df['Sponsored'] = df['Sponsored'].astype(str).str.strip()
+    df['Lost Date'] = df['Lost Date'].astype(str).str.strip()
+    
+    # Optionally handle NaN by converting them to an empty string
+    df['Lost Date'].fillna('', inplace=True)
+    
     return df
+
 
 # Function to calculate the score for a backlink
 def calculate_score(row, anchor_keywords):
