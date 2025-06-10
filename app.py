@@ -50,10 +50,12 @@ def clean_data(df):
 def calculate_score(row, anchor_keywords):
     # If the link is nofollow or sponsored or lost_date exists, return 0
     if row['Nofollow'] == 'TRUE' or row['Sponsored'] == 'TRUE' or row['Lost Date']:
+        print(f"Skipping {row['Referring page title']} due to Nofollow, Sponsored, or Lost Date")
         return 0
 
     # Debugging: Print out row data to see if it's being processed correctly
     print(f"Processing row: {row['Referring page title']}")
+    print(f"Anchor: {row['Anchor']}, Nofollow: {row['Nofollow']}, Sponsored: {row['Sponsored']}, Lost Date: {row['Lost Date']}")
 
     # Normalize values
     dr_min, dr_max = 0, 100
@@ -103,6 +105,7 @@ def calculate_score(row, anchor_keywords):
     print(f"Final Score for {row['Referring page title']}: {score}")
     
     return score
+
 
 # Streamlit UI setup
 st.title('Backlink Scoring Tool')
