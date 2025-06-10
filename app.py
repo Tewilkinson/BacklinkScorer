@@ -8,7 +8,6 @@ def normalize(value, min_value, max_value):
     return 10 * (value - min_value) / (max_value - min_value)
 
 # Function to generate a template Excel file for user download
-
 def create_template():
     data = {
         'Referring page title': ['Page 1', 'Page 2'],
@@ -114,7 +113,13 @@ if uploaded_file:
         # Visualize the scores as a bar chart
         st.bar_chart(df[['Referring page title', 'Score']].set_index('Referring page title'))
         
-        # Optionally allow the user to download the results
-        st.download_button('Download Scored Data', df.to_excel(index=False), file_name="scored_backlinks.xlsx")
+        # Generate the Excel file and allow users to download it
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False)
+        output.seek(0)
+
+        # Allow users to download the scored Excel file
+        st.download_button('Download Scored Data', output, file_name="scored_backlinks.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     else:
         st.error("The uploaded file must contain the required columns: Referring page title, Referring page URL, Domain rating, UR, Referring domains, Page traffic, Anchor, Link Type, Nofollow, Sponsored, Lost Date, First Seen, Last Seen.")
