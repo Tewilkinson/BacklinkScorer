@@ -100,7 +100,7 @@ if uploaded_file:
         ).reset_index().sort_values(by='domain_score', ascending=False).head(10)
 
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=domain_summary['Domain'], y=domain_summary['domain_score'], name='Domain Score', marker_color='light grey'))
+        fig.add_trace(go.Bar(x=domain_summary['Domain'], y=domain_summary['domain_score'], name='Domain Score', marker_color='grey'))
         fig.add_trace(go.Scatter(x=domain_summary['Domain'], y=domain_summary['link_count'], mode='lines+markers', name='Link Count', yaxis='y2', marker_color='red'))
 
         fig.update_layout(title='Domain Score & Link Count', yaxis=dict(title='Domain Score'),
