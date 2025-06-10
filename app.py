@@ -85,11 +85,11 @@ def calculate_score(row, anchor_keywords, weights):
 st.title('Backlink Scoring Dashboard')
 
 # Sidebar: Download template
-st.sidebar.subheader('📥 Download Template')
+st.sidebar.subheader('Download Template')
 st.sidebar.download_button('Download Template', create_template(), file_name='backlink_template.xlsx')
 
 # Tabs: Controls | Dashboard
-tab1, tab2 = st.tabs(["📊 Dashboard", "⚙️ Controls"])
+tab1, tab2 = st.tabs(["Dashboard", "Controls"])
 
 with tab2:
     st.subheader("Scoring Weights")
@@ -149,7 +149,7 @@ with tab1:
             col1.metric("📈 Overall Score", f"{overall_score:.1f}")
             col2.metric("🔗 Total Links Submitted", total_links_submitted)
 
-            st.subheader("🏆 Top 10 Links")
+            st.subheader("Top 10 Links")
             top_links = df[df['Score'] > 0].sort_values(by='Score', ascending=False).head(10)
             top_links = top_links.reset_index(drop=True)
             top_links['Position'] = range(1, len(top_links) + 1)
