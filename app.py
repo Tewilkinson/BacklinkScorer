@@ -40,6 +40,19 @@ def clean_data(df):
     df['Lost Date'] = df['Lost Date'].fillna('').astype(str).str.strip()
     return df
 
+# Function to score title relevance
+def title_relevance_score(title, keyword):
+    if not isinstance(title, str):
+        return 0
+    title_lower = title.lower()
+    keyword_lower = keyword.lower()
+    if keyword_lower in title_lower:
+        return 1.0  # Exact match
+    elif any(part in title_lower for part in keyword_lower.split()):
+        return 0.5  # Partial match
+    else:
+        return -1.0  # Not relevant
+
 # Function to calculate score for a backlink
 def calculate_score(row, anchor_keywords):
     if row['Nofollow'].upper() == 'TRUE' or row['Sponsored'].upper() == 'TRUE' or row['Lost Date'] != '':
@@ -54,13 +67,17 @@ def calculate_score(row, anchor_keywords):
 
     link_type_adjustment = 2 if row['Link Type'] == 'text' else -2 if row['Link Type'] in ['image', 'nav'] else 0
 
+    title_bonus = 0
+    if anchor_keywords:
+        title_bonus = title_relevance_score(row['Referring page title'], anchor_keywords[0])
+
     score = ((normalized_dr * 0.30) + (normalized_ur * 0.20) + (normalized_rd * 0.20) +
-             (normalized_traffic * 0.15) + (anchor_bonus * 0.10) + (link_type_adjustment * 0.05))
+             (normalized_traffic * 0.15) + (anchor_bonus * 0.10) + (link_type_adjustment * 0.05) + title_bonus)
 
     return round(score, 1)
 
 # Streamlit UI setup
-st.title('Backlink Scoring Dashboard')
+st.title('📊 Backlink Scoring Dashboard')
 
 st.sidebar.subheader('Download Template')
 st.sidebar.download_button('Download Template', create_template(), file_name='backlink_template.xlsx')
@@ -100,8 +117,8 @@ if uploaded_file:
         ).reset_index().sort_values(by='domain_score', ascending=False).head(10)
 
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=domain_summary['Domain'], y=domain_summary['domain_score'], name='Domain Score', marker_color='#c2c2c2'))
-        fig.add_trace(go.Scatter(x=domain_summary['Domain'], y=domain_summary['link_count'], mode='lines+markers', name='Link Count', yaxis='y2', marker_color='red'))
+        fig.add_trace(go.Bar(x=domain_summary['Domain'], y=domain_summary['domain_score'], name='Domain Score', marker_color='skyblue'))
+        fig.add_trace(go.Scatter(x=domain_summary['Domain'], y=domain_summary['link_count'], mode='lines+markers', name='Link Count', yaxis='y2'))
 
         fig.update_layout(title='Domain Score & Link Count', yaxis=dict(title='Domain Score'),
                           yaxis2=dict(title='Link Count', overlaying='y', side='right'))
