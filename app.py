@@ -99,7 +99,7 @@ ur_weight = st.slider("UR Weight", 0.0, 1.0, 0.20, 0.01)
 rd_weight = st.slider("Referring Domains Weight", 0.0, 1.0, 0.10, 0.01)
 traffic_weight = st.slider("Page Traffic Weight", 0.0, 1.0, 0.20, 0.01)
 
-    total = dr_weight + ur_weight + rd_weight + traffic_weight
+total = dr_weight + ur_weight + rd_weight + traffic_weight
     if total == 0:
         st.warning("At least one weight must be greater than 0.")
         weights = {'DR': 0.25, 'UR': 0.25, 'RD': 0.25, 'Traffic': 0.25}
