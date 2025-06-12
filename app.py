@@ -94,12 +94,14 @@ tab1, tab2 = st.tabs(["Dashboard", "Controls"])
 with tab2:
     st.subheader("Scoring Weights")
 
-dr_weight = st.slider("Domain Rating Weight", 0.0, 1.0, 0.30, 0.01)
-ur_weight = st.slider("UR Weight", 0.0, 1.0, 0.20, 0.01)
-rd_weight = st.slider("Referring Domains Weight", 0.0, 1.0, 0.10, 0.01)
-traffic_weight = st.slider("Page Traffic Weight", 0.0, 1.0, 0.20, 0.01)
+    # Sliders with new default values
+    dr_weight = st.slider("Domain Rating Weight", 0.0, 1.0, 0.30, 0.01)
+    ur_weight = st.slider("UR Weight", 0.0, 1.0, 0.20, 0.01)
+    rd_weight = st.slider("Referring Domains Weight", 0.0, 1.0, 0.10, 0.01)
+    traffic_weight = st.slider("Page Traffic Weight", 0.0, 1.0, 0.20, 0.01)
 
-total = dr_weight + ur_weight + rd_weight + traffic_weight
+    # Normalize weights
+    total = dr_weight + ur_weight + rd_weight + traffic_weight
     if total == 0:
         st.warning("At least one weight must be greater than 0.")
         weights = {'DR': 0.25, 'UR': 0.25, 'RD': 0.25, 'Traffic': 0.25}
@@ -118,7 +120,7 @@ total = dr_weight + ur_weight + rd_weight + traffic_weight
     - Referring Domains: {weights['RD']:.2f}
     - Page Traffic: {weights['Traffic']:.2f}
     """)
-
+    
 with tab1:
     anchor_input = st.text_input("Anchor text keywords (comma-separated):", "")
     anchor_keywords = [keyword.strip() for keyword in anchor_input.split(',')] if anchor_input else []
