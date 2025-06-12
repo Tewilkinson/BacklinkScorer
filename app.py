@@ -94,11 +94,10 @@ tab1, tab2 = st.tabs(["Dashboard", "Controls"])
 with tab2:
     st.subheader("Scoring Weights")
 
-    dr_weight = st.slider("Domain Rating Weight", 0.0, 1.0, 0.30, 0.01)
+dr_weight = st.slider("Domain Rating Weight", 0.0, 1.0, 0.30, 0.01)
 ur_weight = st.slider("UR Weight", 0.0, 1.0, 0.20, 0.01)
 rd_weight = st.slider("Referring Domains Weight", 0.0, 1.0, 0.10, 0.01)
 traffic_weight = st.slider("Page Traffic Weight", 0.0, 1.0, 0.20, 0.01)
-
 
     total = dr_weight + ur_weight + rd_weight + traffic_weight
     if total == 0:
